@@ -1,101 +1,232 @@
-import Image from "next/image";
+'use client'
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+// Simulated election data with voter turnout
+const nationalData = [
+  { name: 'Kamala Harris (D)', value: 51, color: '#3b82f6' },
+  { name: 'Donald Trump (R)', value: 47, color: '#ef4444' },
+  { name: 'Other', value: 2, color: '#22c55e' },
+]
+
+const stateData = {
+  WA: {
+    results: [
+      { name: 'Kamala Harris (D)', value: 58, color: '#3b82f6' },
+      { name: 'Donald Trump (R)', value: 39, color: '#ef4444' },
+      { name: 'Other', value: 3, color: '#22c55e' },
+    ],
+    turnout: 72,
+  },
+  OR: {
+    results: [
+      { name: 'Kamala Harris (D)', value: 56, color: '#3b82f6' },
+      { name: 'Donald Trump (R)', value: 41, color: '#ef4444' },
+      { name: 'Other', value: 3, color: '#22c55e' },
+    ],
+    turnout: 70,
+  },
+  CA: {
+    results: [
+      { name: 'Kamala Harris (D)', value: 63, color: '#3b82f6' },
+      { name: 'Donald Trump (R)', value: 34, color: '#ef4444' },
+      { name: 'Other', value: 3, color: '#22c55e' },
+    ],
+    turnout: 68,
+  },
+  TX: {
+    results: [
+      { name: 'Kamala Harris (D)', value: 46, color: '#3b82f6' },
+      { name: 'Donald Trump (R)', value: 52, color: '#ef4444' },
+      { name: 'Other', value: 2, color: '#22c55e' },
+    ],
+    turnout: 66,
+  },
+  FL: {
+    results: [
+      { name: 'Kamala Harris (D)', value: 48, color: '#3b82f6' },
+      { name: 'Donald Trump (R)', value: 51, color: '#ef4444' },
+      { name: 'Other', value: 1, color: '#22c55e' },
+    ],
+    turnout: 71,
+  },
+  NY: {
+    results: [
+      { name: 'Kamala Harris (D)', value: 61, color: '#3b82f6' },
+      { name: 'Donald Trump (R)', value: 37, color: '#ef4444' },
+      { name: 'Other', value: 2, color: '#22c55e' },
+    ],
+    turnout: 69,
+  },
+}
+
+const totalVoterTurnout = Object.values(stateData).reduce((sum, state) => sum + state.turnout, 0) / Object.keys(stateData).length
+
+const SimplifiedUSMap = ({ onStateClick }) => (
+  <svg viewBox="0 0 959 593" className="w-full h-auto">
+    <path d="M110 480l60-100 50 20 30-40 90 20 70-110 100 30 80-80 130 50 100-150 80 50v260l-60 70H110V480z" fill="#374151" stroke="#6B7280" />
+    <g onClick={() => onStateClick('WA')} className="cursor-pointer hover:opacity-75">
+      <path d="M110 480l60-100 50 20 30-40 90 20v100H110z" fill="#374151" stroke="#6B7280" />
+      <text x="180" y="420" fontSize="20" textAnchor="middle" fill="#E5E7EB">WA</text>
+    </g>
+    <g onClick={() => onStateClick('OR')} className="cursor-pointer hover:opacity-75">
+      <path d="M340 380l70-110 100 30v110H340z" fill="#374151" stroke="#6B7280" />
+      <text x="425" y="350" fontSize="20" textAnchor="middle" fill="#E5E7EB">OR</text>
+    </g>
+    <g onClick={() => onStateClick('CA')} className="cursor-pointer hover:opacity-75">
+      <path d="M510 300l80-80 130 50v170H510V300z" fill="#374151" stroke="#6B7280" />
+      <text x="615" y="320" fontSize="20" textAnchor="middle" fill="#E5E7EB">CA</text>
+    </g>
+    <g onClick={() => onStateClick('TX')} className="cursor-pointer hover:opacity-75">
+      <path d="M720 440l100-150 80 50v170H720V440z" fill="#374151" stroke="#6B7280" />
+      <text x="810" y="470" fontSize="20" textAnchor="middle" fill="#E5E7EB">TX</text>
+    </g>
+    <g onClick={() => onStateClick('FL')} className="cursor-pointer hover:opacity-75">
+      <path d="M840 510l60-70v70H840z" fill="#374151" stroke="#6B7280" />
+      <text x="870" y="490" fontSize="20" textAnchor="middle" fill="#E5E7EB">FL</text>
+    </g>
+    <g onClick={() => onStateClick('NY')} className="cursor-pointer hover:opacity-75">
+      <path d="M720 290l100-150v150H720z" fill="#374151" stroke="#6B7280" />
+      <text x="770" y="220" fontSize="20" textAnchor="middle" fill="#E5E7EB">NY</text>
+    </g>
+  </svg>
+)
+
+const CustomPieChart = ({ data, title, description, turnout }) => (
+  <Card className="dark:bg-gray-800">
+    <CardHeader>
+      <CardTitle className="dark:text-white">{title}</CardTitle>
+      <CardDescription className="dark:text-gray-400">{description}</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <ChartContainer
+        config={{
+          Democratic: { label: "Democratic", color: "#3b82f6" },
+          Republican: { label: "Republican", color: "#ef4444" },
+          Other: { label: "Other", color: "#22c55e" },
+        }}
+        className="h-[300px]"
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              labelLine={false}
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Legend verticalAlign="bottom" height={36} />
+          </PieChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+      {turnout && (
+        <div className="mt-4 text-center dark:text-white">
+          Voter Turnout: {turnout}%
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      )}
+    </CardContent>
+  </Card>
+)
+
+const VoterTurnoutChart = ({ data }) => (
+  <Card className="dark:bg-gray-800">
+    <CardHeader>
+      <CardTitle className="dark:text-white">Voter Turnout by State</CardTitle>
+      <CardDescription className="dark:text-gray-400">Percentage of registered voters who voted</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <ChartContainer
+        config={{
+          turnout: { label: "Turnout", color: "#3b82f6" },
+        }}
+        className="h-[300px]"
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={Object.entries(data).map(([state, { turnout }]) => ({ state, turnout }))}>
+            <XAxis dataKey="state" />
+            <YAxis />
+            <Tooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="turnout" fill="var(--color-turnout)" />
+          </BarChart>
+        </ResponsiveContainer>
+      </ChartContainer>
+    </CardContent>
+  </Card>
+)
+
+export default function ElectionDashboard() {
+  const [selectedState, setSelectedState] = useState(null)
+
+  const handleStateClick = (state) => {
+    setSelectedState(state)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="container mx-auto p-4">
+        <h1 className="text-3xl font-bold mb-6 text-center">US Elections 2024 Dashboard</h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <CustomPieChart
+            data={nationalData}
+            title="National Results"
+            description="Overall election results"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+          <Card className="dark:bg-gray-800">
+            <CardHeader>
+              <CardTitle className="dark:text-white">Total Voter Turnout</CardTitle>
+              <CardDescription className="dark:text-gray-400">Average turnout across all states</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-6xl font-bold text-center dark:text-white">
+                {totalVoterTurnout.toFixed(1)}%
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="dark:bg-gray-800">
+            <CardHeader>
+              <CardTitle className="dark:text-white">State Map</CardTitle>
+              <CardDescription className="dark:text-gray-400">Click on a state to see detailed results</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SimplifiedUSMap onStateClick={handleStateClick} />
+            </CardContent>
+          </Card>
+
+          <VoterTurnoutChart data={stateData} />
+
+          {selectedState && (
+            <Card className="md:col-span-2 dark:bg-gray-800">
+              <CardHeader>
+                <CardTitle className="dark:text-white">{selectedState} State Results</CardTitle>
+                <CardDescription className="dark:text-gray-400">Detailed election results for {selectedState}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <CustomPieChart
+                  data={stateData[selectedState].results}
+                  title={`${selectedState} Results`}
+                  description={`Election results for ${selectedState}`}
+                  turnout={stateData[selectedState].turnout}
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
     </div>
-  );
+  )
 }
